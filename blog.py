@@ -358,19 +358,18 @@ class EditPost(BlogHandler):
 
 class DeletePost(BlogHandler):
     def get(self, post_id):
-        uid = self.read_secure_cookie('user_id')
-
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         # Does the specific post exist?
-        if self.user and self.user.key().id() == int(uid):
-            print "Delete... ", self.user.key().id(), int(uid)
+        if self.user and self.user.key().id() != post.author:
+            print "DO NOT Delete... ", self.user.key().id()
+            msg= "You cannot delete this post!"
+            self.render('deletepost.html', msg=msg)
+        else:
+            print "Delete... ", self.user.key().id()
             db.delete(key)
             msg = "This post is successfully deleted!"
             self.render('deletepost.html', msg=msg)
-        else:
-            print "DO NOT Delete... ", self.user.key().id(), int(uid)
-            self.write("You cannot delete your comment")
 
 
 
