@@ -127,16 +127,17 @@ class Post(db.Model):
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
-    # comments = db.StringProperty()
+    author = db.IntegerProperty(required = True)
 
     def render(self):
+
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
 
 class Comment(db.Model):
     comments = db.StringProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
     post_id = db.IntegerProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -144,12 +145,13 @@ class BlogFront(BlogHandler):
 
         self.render('front.html', posts = posts)
 
+
 class PostPage(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         comments = Comment.all().filter('post_id=', post_id)
-        print "comments and post_id: ",  comments, post_id
+        print "comments and post_id: ",  comments, post_id, key
 
         if not post:
             self.error(404)
@@ -200,10 +202,11 @@ class NewPost(BlogHandler):
 
         subject = self.request.get('subject')
         content = self.request.get('content')
+        author = self.user.key().id()
 
         if subject and content:
             print "NewPost... ", self.user.key().id(), int(uid)
-            p = Post(parent = blog_key(), subject = subject, content = content)
+            p = Post(parent = blog_key(), subject = subject, content = content, author=int(author))
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
@@ -317,21 +320,18 @@ class Welcome(BlogHandler):
 
 class EditPost(BlogHandler):
     def get(self, post_id):
-        uid = self.read_secure_cookie('user_id')
-        posts = greetings = Post.all().order('-created')
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        print "heyy...", self.user.key().id(), post.author, post_id
+        print "this is edit post page...: ", post_id
 
         # Edit posts if user id and the author matches, otherwise go to the login page
-        if self.user and self.user.key().id() != int(uid):
+        if self.user and self.user.key().id() != post.author:
             print "self.user.key().id(): ", self.user.key().id()
-            print "uid: ", uid
             error = "You are not allowed to edit this post!"
             self.write(error)
         else:
-            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-            post = db.get(key)
-            print "self.user.key().id(): ", self.user.key().id()
-            print "uid: ", uid
-            self.render('editpost.html', post = post, uid=uid)
+            self.render('editpost.html', post = post)
 
         # If the specific post does not exist return 404
         if not post:
@@ -341,16 +341,20 @@ class EditPost(BlogHandler):
     def post(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-
-        subject = self.request.get('subject')
-        content = self.request.get('content')
-        if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content)
-            p.put()
-            self.redirect('/blog/%s' % str(p.key().id()))
+        if self.user and self.user.key().id() != post.author:
+            error = "You're not allowed"
+            self.write(error=error)
         else:
-            error = "subject and content, please!"
-            self.render("editpost.html", post=post, subject=subject, content=content, error=error)
+            subject = self.request.get('subject')
+            content = self.request.get('content')
+
+            if subject and content:
+                p = Post(parent = blog_key(), subject = subject, content = content, author=int(post.author))
+                p.put()
+                self.redirect('/blog/%s' % str(p.key().id()))
+            else:
+                error = "subject and content, please!"
+                self.render("editpost.html", post=post, subject=subject, content=content, error=error)
 
 class DeletePost(BlogHandler):
     def get(self, post_id):
