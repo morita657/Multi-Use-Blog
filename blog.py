@@ -319,13 +319,14 @@ class Welcome(BlogHandler):
             self.redirect('/unit2/signup')
 
 class EditPost(BlogHandler):
+    # Go to the specific post page to edit
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         print "heyy...", self.user.key().id(), post.author, post_id
         print "this is edit post page...: ", post_id
 
-        # Edit posts if user id and the author matches, otherwise go to the login page
+        # Edit posts if user id and the author's match, otherwise invoke error message
         if self.user and self.user.key().id() != post.author:
             print "self.user.key().id(): ", self.user.key().id()
             error = "You are not allowed to edit this post!"
@@ -357,10 +358,11 @@ class EditPost(BlogHandler):
                 self.render("editpost.html", post=post, subject=subject, content=content, error=error)
 
 class DeletePost(BlogHandler):
+    # Delte the post page
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        # Does the specific post exist?
+        # Check if the editer is logged in and the editer is the author of the post.
         if self.user and self.user.key().id() != post.author:
             print "DO NOT Delete... ", self.user.key().id()
             msg= "You cannot delete this post!"
