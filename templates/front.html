@@ -1,0 +1,54 @@
+{% extends "base.html" %} {% block content %}
+<a href="/blog/newpost">Add</a> {% for p in posts %}
+
+<div class="post">
+    <div class="post-heading">
+        <div class="post-title-link">
+            <a href="{{'/blog/%s' % p.key().id()}}">{{ p.subject | safe }}</a>
+        </div>
+        <div class="btn">
+            <a href="{{'/blog/editpost/%s' % p.key().id()}}">
+                <!-- <button class="btn-primary"> -->
+                <input type="button" name="" value="Edit Post">
+
+                <!-- </button> -->
+            </a>
+            <a href="{{'/blog/deletepost/%s' % p.key().id()}}">
+                <!-- <button class="btn-danger"> -->
+                <input type="button" name="" value="Delete Post">
+                <!-- </button> -->
+            </a>
+        </div>
+
+        <div class="post-date">
+            {{ p.created | safe }}
+        </div>
+    </div>
+
+    <div class="post-content">
+        {{ p.content | safe }}
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- <div class="post-title">
+    <a href="{{'/blog/%s' % p.key().id()}}">{{ p.subject | safe }}</a>
+</div>
+{{ p.render() | safe }} -->
+
+
+<!-- <form class="" action="index.html" method="post"> -->
+<!-- <label for="comment" class="comment-label">Add comments</label>
+<textarea id="comment" class="comment" name="name" rows="4">{{comment}}</textarea><br>
+<div class="error">{{error}}</div>
+<a href="{{'/blog/comment/%s' % p.key().id()}}">preview</a> -->
+<!-- <input type="submit" name="" value="submit"> -->
+<!-- </form> -->
+
+<br><br>{% endfor %} {% endblock %}
