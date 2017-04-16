@@ -1,15 +1,40 @@
+<!-- <div class="post">
+    <div class="post-heading">
+        <div class="post-title">
+            {{p.subject}}
+        </div>
+
+        <div class="post-date">
+            {{p.created.strftime("%b %d, %Y")}}
+        </div>
+    </div>
+
+    <div class="post-content">
+        {{p._render_text | safe}}
+    </div>
+</div>
+ -->
+
 <div class="post">
-  <div class="post-heading">
-    <div class="post-title">
-      {{p.subject}}
+    <div class="post-heading">
+        <div class="post-title-link">
+            <a href="{{'/blog/%s' % p.key().id()}}">{{ p.subject | safe }}</a>
+        </div>
+        <div class="btn">
+            <a href="{{'/blog/editpost/%s' % p.key().id()}}">
+                <input type="button" name="" value="Edit Post">
+            </a>
+            <a href="{{'/blog/deletepost/%s' % p.key().id()}}">
+                <input type="button" name="" value="Delete Post">
+            </a>
+        </div>
+
+        <div class="post-date">
+            {{ p.created | safe }}
+        </div>
     </div>
 
-    <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}}
+    <div class="post-content">
+        {{ p._render_text | safe }}
     </div>
-  </div>
-
-  <div class="post-content">
-    {{p._render_text | safe}}
-  </div>
 </div>
