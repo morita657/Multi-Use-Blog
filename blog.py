@@ -138,6 +138,8 @@ class Comment(db.Model):
     comments = db.StringProperty(required = True)
     post_id = db.IntegerProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
+    comment_author = db.StringProperty(required = True)
+
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -147,28 +149,36 @@ class BlogFront(BlogHandler):
 
 
 class PostPage(BlogHandler):
-    def get(self, post_id):
+    def get(self, post_id, comment=""):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        comments = Comment.all().filter('post_id=', post_id)
-        print "comments and post_id: ",  comments, post_id, key
+
+        # Look up comments
+        comments = Comment.all().filter('post_id =', int(post_id))
+
+        data = []
+        for c in comments:
+            data.append(c)
+            print "data: ", data
 
         if not post:
             self.error(404)
             return
 
         post._render_text = post.content.replace('\n', '<br>')
-        self.render("permalink.html", post = post, comments=comments)
+        self.render("permalink.html", post = post, comment=comment, comments=data)
 
     def post(self, post_id):
         comments = self.request.get('comment')
-
-        print "what is...", comments
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        print "putting...", comments
 
-        p = Comment(parent = key, comments=comments, post_id=int(post_id))
-        p.put()
-        self.redirect('/blog/%s' % int(post_id))
+        if self.user:
+            p = Comment(parent = key, comments=comments, post_id=int(post_id), comment_author=str(self.user.name))
+            p.put()
+            self.redirect('/blog/%s' % int(post_id))
+        else:
+            self.redirect('/login')
 
 # class CommentPost(BlogHandler):
         #     def post(self, post_id, comments=""):
