@@ -160,6 +160,7 @@ class PostPage(BlogHandler):
         for c in comments:
             data.append(c)
             print "data: ", data
+        # print "PPOST: ", self.user.key().id()
 
         if not post:
             self.error(404)
@@ -180,23 +181,29 @@ class PostPage(BlogHandler):
         else:
             self.redirect('/login')
 
-# class CommentPost(BlogHandler):
-        #     def post(self, post_id, comments=""):
-        #         # subject = self.request.get('subject')
-        #         # content = self.request.get('content')
-        #         comments = self.request.get('comment')
-        #
-        #         print "what is...", comments
-        #
-        #         if not comments:
-        #             error = "not data"
-        #             print error
-        #             self.render("permalink.html", error=error)
-        #         else:
-        #             print "what is..."
-        #             p = Comment(parent = blog_key(), comments=post_id)#, subject=subject, content=content)
-        #             p.put()
-        #             self.redirect('/blog/%s' % str(p.key().id()))
+class EditComment(BlogHandler):
+    def get(self, post_id):
+        # key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        # post = db.get(key)
+        # Look up comments
+        # print "This is comment something... ", comment.by_id()
+        # print "post...", post_id
+        comments = Comment.all().filter('post_id =', int(post_id))
+        for d in comments:
+            # print "print d: ", d, d.comments
+            # print "post_id: ", d.post_id, d.key().id()
+            print "Pint comment: ", d.comments
+            print "Print comment id: ", d.key().id()
+
+        self.render('editcomment.html', comments=d.comments)
+
+    def post(self, post_id):
+        comments = self.request.get('comment')
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        p = Comment(parent = key, comments=comments, post_id=int(post_id), comment_author=str(self.user.name))
+        p.put()
+        self.redirect('/blog/%s' % int(post_id))
+
 
 class NewPost(BlogHandler):
     def get(self):
@@ -333,11 +340,14 @@ class EditPost(BlogHandler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        print "heyy...", self.user.key().id(), post.author, post_id
+        # print "heyy...", self.user.key().id(), post.author, post_id
         print "this is edit post page...: ", post_id
 
         # Edit posts if user id and the author's match, otherwise invoke error message
-        if self.user and self.user.key().id() != post.author:
+        print "Check user... ", self.user
+        if self.user == "":
+            self.redirect('/login')
+        elif self.user and self.user.key().id() != post.author:
             print "self.user.key().id(): ", self.user.key().id()
             error = "You are not allowed to edit this post!"
             self.write(error)
@@ -352,7 +362,10 @@ class EditPost(BlogHandler):
     def post(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        if self.user and self.user.key().id() != post.author:
+        if self.user == "":
+            msg= "You cannot delete this post!"
+            self.render('deletepost.html', msg=msg)
+        elif self.user and self.user.key().id() != post.author:
             error = "You're not allowed"
             self.write(error=error)
         else:
@@ -373,12 +386,15 @@ class DeletePost(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         # Check if the editer is logged in and the editer is the author of the post.
-        if self.user and self.user.key().id() != post.author:
+        if self.user == "":
+            msg= "You cannot delete this post!"
+            self.render('deletepost.html', msg=msg)
+        elif self.user and self.user.key().id() != post.author:
             print "DO NOT Delete... ", self.user.key().id()
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
         else:
-            print "Delete... ", self.user.key().id()
+            # print "Delete... ", self.user.key().id()
             db.delete(key)
             msg = "This post is successfully deleted!"
             self.render('deletepost.html', msg=msg)
@@ -399,5 +415,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/editpost/(\d+)', EditPost),
                                ('/blog/deletepost/(\d+)', DeletePost),
                             #    ('/blog/([0-9]+)', CommentPost),
+                               ('/blog/editcomment/(\d+)', EditComment),
                                ],
                               debug=True)

@@ -26,7 +26,14 @@
       right: 0px;
       color: #999;">
         {{ comment.created }}
-    </div><br>
+    </div>
+    <a href="{{'/blog/editcomment/%s' % post.key().id()}}">
+        <input type="button" name="" value="Edit Comment">
+    </a>
+
+    <input type="button" name="" value="Delete Comment">
+
+    <br>
     <div class="" style="float:left">
         {{ comment.comments }}
     </div>
