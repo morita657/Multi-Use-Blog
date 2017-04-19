@@ -1,8 +1,9 @@
 {% extends "base.html" %} {% block content %}
 <form method="post">
     <label for="comment" class="comment-label">Edit your comment: </label>
-    <textarea name="comment" rows="8" cols="80">{{ comments }}</textarea>
+    <textarea name="comment" rows="8" cols="80">{{ comment.comments }}</textarea>
     <!-- <input type="text" name="comment" value="{{ comments }}"> -->
+    {{post_id}}
     <div class="error">{{ error }}</div>
     <input type="submit">
 </form>

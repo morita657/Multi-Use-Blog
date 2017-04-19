@@ -27,7 +27,7 @@
       color: #999;">
         {{ comment.created }}
     </div>
-    <a href="{{'/blog/editcomment/%s' % post.key().id()}}">
+    <a href="/blog/editcomment/{{comment.key().id()}}">
         <input type="button" name="" value="Edit Comment">
     </a>
 
@@ -37,6 +37,9 @@
     <div class="" style="float:left">
         {{ comment.comments }}
     </div>
+    <br>
+    <span style="color:red;">
+     {{ commenterror }}</span>
     <br><br>
 </div>
 {% endfor %}
