@@ -189,7 +189,9 @@ class PostPage(BlogHandler):
 
 class EditComment(BlogHandler):
     def get(self, post_id):
-        if self.user:
+        if self.user == "":
+            self.redirect("/login")
+        elif self.user:
             key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
             comment = db.get(key)
             print "this is author id ", self.user.key().id()
@@ -224,13 +226,20 @@ class EditComment(BlogHandler):
         # comments = key.get()
         # self.write(comment.comments)
 
-    # def post(self, post_id):
-    #     comments = self.request.get('comments')
-    #     key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-    #     p = Comment(parent = key, comments=comments, post_id=int(post_id), comment_author=str(self.user.name))
-    #     p.put()
-    #     self.redirect('/blog/%s' % int(post_id))
-
+class DeleteComment(BlogHandler):
+    def get(self, post_id):
+        if self.user == "":
+            self.redirect("/login")
+        elif self.user:
+            key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
+            comment = db.get(key)
+            if self.user.name == comment.comment_author:
+                db.delete(key)
+                msg = "This comment is successfully deleted!"
+                self.render("deletecomment.html", msg=msg)
+            else:
+                error = "You are not allowed to delete this comment!"
+                self.write(error)
 
 class NewPost(BlogHandler):
     def get(self):
@@ -444,5 +453,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/deletepost/(\d+)', DeletePost),
                             #    ('/blog/([0-9]+)', CommentPost),
                                ('/blog/editcomment/(\d+)', EditComment),
+                               ('/blog/deletecomment/(\d+)', DeleteComment),
                                ],
                               debug=True)
