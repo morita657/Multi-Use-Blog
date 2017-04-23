@@ -1,5 +1,9 @@
 {% extends "base.html" %} {% block content %}
-<a href="/blog/newpost">Add</a> {% for p in posts %} {{ p.render() | safe }}
+<a href="/blog/newpost">
+    <i class="fa fa-plus-circle fa-2x" aria-hidden="true"></i>
+    <span id="add-post">Add Post</span>
+</a>
+{% for p in posts %} {{ p.render() | safe }}
 
 
 <br><br>{% endfor %} {% endblock %}

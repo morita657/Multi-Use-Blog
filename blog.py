@@ -140,7 +140,7 @@ class Post(db.Model):
         return render_str("post.html", p = self)
 
 class Comment(db.Model):
-    comments = db.StringProperty(required = True)
+    comments = db.TextProperty(required = True)
     post_id = db.IntegerProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     comment_author = db.StringProperty(required = True)
@@ -155,6 +155,9 @@ class Comment(db.Model):
 class BlogFront(BlogHandler):
     def get(self):
         posts = greetings = Post.all().order('-created')
+
+        for post in posts:
+            print "post author", post.author
 
         self.render('front.html', posts = posts)
 
@@ -191,7 +194,7 @@ class PostPage(BlogHandler):
             self.redirect('/blog/%s' % int(post_id))
         else:
             error= "You cannot comment on your post"
-            self.write(error)
+            self.render("error.html", error=error)
 
 class EditComment(BlogHandler):
     def get(self, post_id):
@@ -206,7 +209,7 @@ class EditComment(BlogHandler):
                 self.render("editcomment.html", comment=comment)
             else:
                 error = "You are not allowed to edit this comment!"
-                self.write(error)
+                self.render("error.html", error=error)
 
     def post(self, post_id):
         key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
@@ -245,7 +248,7 @@ class DeleteComment(BlogHandler):
                 self.render("deletecomment.html", msg=msg)
             else:
                 error = "You are not allowed to delete this comment!"
-                self.write(error)
+                self.render("error.html", error=error)
 
 class LikePost(BlogHandler):
     def post(self, post_id):
@@ -257,7 +260,7 @@ class LikePost(BlogHandler):
             print "post author: ", post.author
             print "user key id: ", self.user.key().id()
             error = "You cannot upvoke this post!"
-            self.write(error)
+            self.render("error.html", error=error)
         elif  self.user and post.author != self.user.key().id():
             if not self.user.key().id() in post.like:
                 print "post author: ", post.author
@@ -422,7 +425,7 @@ class EditPost(BlogHandler):
         elif self.user and self.user.key().id() != post.author:
             print "self.user.key().id(): ", self.user.key().id()
             error = "You are not allowed to edit this post!"
-            self.write(error)
+            self.render("error.html", error=error)
         else:
             self.render('editpost.html', post = post)
 
@@ -439,7 +442,7 @@ class EditPost(BlogHandler):
             self.render('deletepost.html', msg=msg)
         elif self.user and self.user.key().id() != post.author:
             error = "You're not allowed"
-            self.write(error=error)
+            self.render("error.html", error=error)
         else:
             subject = self.request.get('subject')
             content = self.request.get('content')
@@ -491,7 +494,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                             #    ('/blog/([0-9]+)', CommentPost),
                                ('/blog/editcomment/(\d+)', EditComment),
                                ('/blog/deletecomment/(\d+)', DeleteComment),
-                            #    ('/blog/liked/(\d+)', LikePost),
                                ('/blog/liked/(\d+)', LikePost),
                                ],
                               debug=True)

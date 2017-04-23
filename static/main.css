@@ -2,7 +2,8 @@ body {
     position: relative;
     font-family: Helvetica, Arial, sans-serif;
     font-size: 14px;
-    width: 800px;
+    /*width: 800px;*/
+    width: 100%;
     margin: 0 auto;
     padding: 10px;
     color: #333;
@@ -49,7 +50,8 @@ label+label {
 }
 
 input[type=text] {
-    width: 500px;
+    /*width: 500px;*/
+    width: 100%;
     font-size: 20px;
     padding: 2px;
     font-family: monospace;
@@ -93,7 +95,7 @@ input[type=submit] {
 .post-title-link {
     font-size: 24px;
     font-weight: bold;
-    float: left;
+    /*float: left;*/
     margin-right: 10px;
 }
 
@@ -115,4 +117,27 @@ input[type=submit] {
 .comment {
     width: 60%;
     height: 20px;
+}
+
+#total-votes {
+    float: left;
+    margin: 15px;
+    margin-left: 0;
+}
+
+#good {
+    font-size: 25px;
+    margin: 0;
+    vertical-align: text-bottom;
+    padding: 0;
+}
+
+#comment-title {
+    font-size: 25px;
+    width: 10%;
+}
+
+#add-post {
+    margin: 10px;
+    vertical-align: super;
 }

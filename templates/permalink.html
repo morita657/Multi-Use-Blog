@@ -1,5 +1,6 @@
 {% extends "base.html" %} {% block content %}
-
+<!-- <div class="row">
+    <div class="col-xs-12"> -->
 <div class="post">
     <div class="post-heading">
         <div class="post-title">
@@ -11,31 +12,34 @@
         </div>
     </div>
 
-    <div class="post-content" style="background-color: #d3d3d3;">
+    <div class="post-content">
         {{ post._render_text | safe }}
     </div>
 
-    <h2>Total votes: {{post.like_by}}</h2>
+    <h3 id="total-votes" style="">Total votes: {{post.like_by}}</h3>
 </div>
-<h2>Commnet: </h2>
+
+{% if user.name %}
+<div class="">
+    <form class="" method="post" action="/blog/liked/{{post.key().id()}}">
+        <span id="good">good</span>
+        <button type="submit" name="button">
+          <i class="fa fa-thumbs-o-up fa-3x" aria-hidden="true" type="submit"></i>
+        </button>
+    </form>
+</div>
+<!-- </div>
+</div> -->
+{% endif %}
+<h3 id="comment-title">Comment: </h3>
 <hr> {% for comment in comments %}
 <div class="">
     <div class="" style="float:left">
         Poted by: {{ comment.comment_author}}
     </div>
-    <div class="" style="
-      position: absolute;
-      right: 0px;
-      color: #999;">
+    <div class="" style="position: absolute; right: 0px; color: #999;">
         {{ comment.created }}
     </div>
-    <a href="/blog/editcomment/{{comment.key().id()}}">
-        <input type="button" name="" value="Edit Comment">
-    </a>
-
-    <a href="/blog/deletecomment/{{comment.key().id()}}">
-        <input type="button" name="" value="Delete Comment">
-    </a>
 
     <br>
     <div class="" style="float:left">
@@ -43,20 +47,22 @@
     </div>
     <br>
     <span style="color:red;">
-     {{ commenterror }}</span>
+                  {{ commenterror }}
+                </span>
     <br><br>
+    <a href="/blog/editcomment/{{comment.key().id()}}">
+        <input class="btn btn-primary" type="button" name="" value="Edit Comment">
+    </a>
+
+    <a href="/blog/deletecomment/{{comment.key().id()}}">
+        <input class="btn btn-primary" type="button" name="" value="Delete Comment">
+    </a>
 </div>
 {% endfor %}
 <form method="post">
-    <label for="comment" class="comment-label">Add comments: </label>
-    <input type="text" name="comment" value="{{ comment }}">
+    <label for="comment" class="comment-label form-group">Add comments: </label>
+    <textarea class="form-control" name="comment" rows="2" cols="80">{{ comment }}</textarea>
+    <!-- <input class="form-control" type="text" name="comment" value=""> -->
     <div class="error">{{ error }}</div>
-    <input type="submit">
-</form>
-{% if user.name %}
-<div class="">
-    <form class="" method="post" action="/blog/liked/{{post.key().id()}}">
-        <input type="submit" name="like" value="like">
-    </form>
-</div>
-{% endif %} {% endblock %}
+    <input class="btn btn-primary" type="submit">
+</form> {% endblock %}

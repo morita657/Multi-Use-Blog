@@ -1,70 +1,95 @@
 <!DOCTYPE html>
 
 <html>
-  <head>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
     <style type="text/css">
-      .label {text-align: right}
-      .error {color: red}
+        .label {
+            text-align: right
+        }
+
+        .error {
+            color: red
+        }
     </style>
+    <!-- <link type="text/css" rel="stylesheet" href="/static/main.css" /> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 
-  </head>
+</head>
 
-  <body>
-    <h2>Signup</h2>
-    <form method="post">
-      <table>
-        <tr>
-          <td class="label">
-            Username
-          </td>
-          <td>
-            <input type="text" name="username" value="{{username}}">
-          </td>
-          <td class="error">
-            {{error_username}}
-          </td>
-        </tr>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
 
-        <tr>
-          <td class="label">
-            Password
-          </td>
-          <td>
-            <input type="password" name="password" value="">
-          </td>
-          <td class="error">
-            {{error_password}}
-          </td>
-        </tr>
+                <h2>Signup</h2>
+                <form method="post">
+                    <table>
+                        <tr class="form-group">
+                            <td class="label">
+                                <label for="username"></label> Username
+                            </td>
+                            <td>
+                                <input id="username" class="form-control" type="text" name="username" value="{{username}}">
+                            </td>
+                            <td class="error">
+                                {{error_username}}
+                            </td>
+                        </tr>
 
-        <tr>
-          <td class="label">
-            Verify Password
-          </td>
-          <td>
-            <input type="password" name="verify" value="">
-          </td>
-          <td class="error">
-            {{error_verify}}
-          </td>
-        </tr>
+                        <tr class="form-group">
+                            <td class="label">
+                                <label for="password"></label> Password
+                            </td>
+                            <td>
+                                <input id="password" class="form-control" type="password" name="password" value="">
+                            </td>
+                            <td class="error">
+                                {{error_password}}
+                            </td>
+                        </tr>
 
-        <tr>
-          <td class="label">
-            Email (optional)
-          </td>
-          <td>
-            <input type="text" name="email" value="{{email}}">
-          </td>
-          <td class="error">
-            {{error_email}}
-          </td>
-        </tr>
-      </table>
+                        <tr>
+                            <td class="label">
+                                <label for="valid_password">
+                                Verify Password
+                              </label>
+                            </td>
+                            <td>
+                                <input id="valid_password" class="form-control" type="password" class="form-control" name="verify" value="">
+                            </td>
+                            <td class="error">
+                                {{error_verify}}
+                            </td>
+                        </tr>
 
-      <input type="submit">
-    </form>
-  </body>
+                        <tr>
+                            <td class="label">
+                                <label for="email">
+                                Email (optional)
+                              </label>
+                            </td>
+                            <td>
+                                <input id="email" class="form-control" type="text" name="email" value="{{email}}">
+                            </td>
+                            <td class="error">
+                                {{error_email}}
+                            </td>
+                        </tr>
+                    </table>
+
+                    <input type="submit" class="btn btn-primary">
+                </form>
+                <hr>
+                <p>Already have an account? <a href="/login">Log in</a></p>
+            </div>
+        </div>
+    </div>
+</body>
 
 </html>
