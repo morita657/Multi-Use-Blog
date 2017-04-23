@@ -128,6 +128,11 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
     author = db.IntegerProperty(required = True)
+    like = db.ListProperty(int)
+
+    @property
+    def like_by(self):
+        return len(self.like)
 
     def render(self):
 
@@ -163,6 +168,7 @@ class PostPage(BlogHandler):
 
         # Look up comments
         comments = Comment.all().filter('post_id =', int(post_id)).order('-created')
+        # print "show user name... ", self.user.key().id()
 
         if not post:
             self.error(404)
@@ -176,8 +182,8 @@ class PostPage(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
 
-        print "putting...", post.author, self.user.key().id()
-        if self.user =="":
+        # print "putting...", post.author, self.user.key().id()
+        if self.user == "":
             self.redirect('/login')
         elif self.user.key().id():
             p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author_id=int(self.user.key().id()))
@@ -240,6 +246,35 @@ class DeleteComment(BlogHandler):
             else:
                 error = "You are not allowed to delete this comment!"
                 self.write(error)
+
+class LikePost(BlogHandler):
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if self.user == "":
+            self.redirect("/signup")
+        elif self.user and post.author == self.user.key().id():
+            print "post author: ", post.author
+            print "user key id: ", self.user.key().id()
+            error = "You cannot upvoke this post!"
+            self.write(error)
+        elif  self.user and post.author != self.user.key().id():
+            if not self.user.key().id() in post.like:
+                print "post author: ", post.author
+                print "user key id: ", self.user.key().id()
+                print "user name: ", self.user.name
+                post.like.append(self.user.key().id())
+                post.put()
+                self.redirect('/blog/%s' % int(post_id))
+            elif self.user.key().id() in post.like:
+                post.like.remove(self.user.key().id())
+                post.put()
+                print "post author: ", post.author
+                print "user key id: ", self.user
+                print "user name: ", self.user.name
+                print "like array: ", post.like
+                self.redirect('/blog/%s' % int(post_id))
+
 
 class NewPost(BlogHandler):
     def get(self):
@@ -456,5 +491,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
                             #    ('/blog/([0-9]+)', CommentPost),
                                ('/blog/editcomment/(\d+)', EditComment),
                                ('/blog/deletecomment/(\d+)', DeleteComment),
+                            #    ('/blog/liked/(\d+)', LikePost),
+                               ('/blog/liked/(\d+)', LikePost),
                                ],
                               debug=True)

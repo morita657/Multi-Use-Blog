@@ -11,9 +11,11 @@
         </div>
     </div>
 
-    <div class="post-content">
+    <div class="post-content" style="background-color: #d3d3d3;">
         {{ post._render_text | safe }}
     </div>
+
+    <h2>Total votes: {{post.like_by}}</h2>
 </div>
 <h2>Commnet: </h2>
 <hr> {% for comment in comments %}
@@ -51,4 +53,10 @@
     <div class="error">{{ error }}</div>
     <input type="submit">
 </form>
-{% endblock %}
+{% if user.name %}
+<div class="">
+    <form class="" method="post" action="/blog/liked/{{post.key().id()}}">
+        <input type="submit" name="like" value="like">
+    </form>
+</div>
+{% endif %} {% endblock %}
