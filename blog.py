@@ -149,7 +149,7 @@ class Comment(db.Model):
     # Find comment post id
     @classmethod
     def find_comment_id(cls, post_id):
-        return Comment.all().filter("post_id =", post_id).get()
+        return Comment.all().filter('post_id =', post_id).get()
 
 
 class BlogFront(BlogHandler):
@@ -163,22 +163,20 @@ class BlogFront(BlogHandler):
 
 
 class PostPage(BlogHandler):
+    # Write new post if a user is logged in.
     def get(self, post_id, comment=""):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
-        # print "post", post_id, key
-        # print "suv  ", post.subject
 
         # Look up comments
         comments = Comment.all().filter('post_id =', int(post_id)).order('-created')
-        # print "show user name... ", self.user.key().id()
 
         if not post:
             self.error(404)
             return
 
         post._render_text = post.content.replace('\n', '<br>')
-        self.render("permalink.html", post = post, comment=comment, comments=comments)
+        self.render('permalink.html', post = post, comment=comment, comments=comments)
 
     def post(self, post_id):
         comments = self.request.get('comment')
@@ -194,9 +192,10 @@ class PostPage(BlogHandler):
             self.redirect('/blog/%s' % int(post_id))
         else:
             error= "You cannot comment on your post"
-            self.render("error.html", error=error)
+            self.render('error.html', error=error)
 
 class EditComment(BlogHandler):
+    # Edit comment if the comment is written by same author.
     def get(self, post_id):
         if self.user == "":
             self.redirect("/login")
@@ -206,10 +205,10 @@ class EditComment(BlogHandler):
             print "this is author id ", self.user.key().id()
             # print "this is c... ", c.comments
             if self.user.name == comment.comment_author:
-                self.render("editcomment.html", comment=comment)
+                self.render('editcomment.html', comment=comment)
             else:
                 error = "You are not allowed to edit this comment!"
-                self.render("error.html", error=error)
+                self.render('error.html', error=error)
 
     def post(self, post_id):
         key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
@@ -228,14 +227,11 @@ class EditComment(BlogHandler):
             self.redirect('/blog/%s' % int(post.post_id))
         else:
             error = "Don't forget to fill in input field!"
-            self.render("editcomment.html", comment=comment, error=error)
-
-
-        # key = db.Key('Comments', int(post_id))
-        # comments = key.get()
-        # self.write(comment.comments)
+            self.render('editcomment.html', comment=comment, error=error)
 
 class DeleteComment(BlogHandler):
+    # A user is allowed to delete a post if she is logged in and the post is
+    # made by her.
     def get(self, post_id):
         if self.user == "":
             self.redirect("/login")
@@ -245,12 +241,14 @@ class DeleteComment(BlogHandler):
             if self.user.name == comment.comment_author:
                 db.delete(key)
                 msg = "This comment is successfully deleted!"
-                self.render("deletecomment.html", msg=msg)
+                self.render('deletecomment.html', msg=msg)
             else:
                 error = "You are not allowed to delete this comment!"
-                self.render("error.html", error=error)
+                self.render('error.html', error=error)
 
 class LikePost(BlogHandler):
+    # If a user is logged in, she is allowed to like/ dislike a specific post
+    # using 'Like' button.
     def post(self, post_id):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
@@ -260,7 +258,7 @@ class LikePost(BlogHandler):
             print "post author: ", post.author
             print "user key id: ", self.user.key().id()
             error = "You cannot upvoke this post!"
-            self.render("error.html", error=error)
+            self.render('error.html', error=error)
         elif  self.user and post.author != self.user.key().id():
             if not self.user.key().id() in post.like:
                 print "post author: ", post.author
@@ -280,9 +278,10 @@ class LikePost(BlogHandler):
 
 
 class NewPost(BlogHandler):
+    # Create new post to fill in a subject and content field while a user is logging in.
     def get(self):
         if self.user:
-            self.render("newpost.html")
+            self.render('newpost.html')
         else:
             self.redirect("/login")
 
@@ -302,7 +301,7 @@ class NewPost(BlogHandler):
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
             error = "subject and content, please!"
-            self.render("newpost.html", subject=subject, content=content, error=error)
+            self.render('newpost.html', subject=subject, content=content, error=error)
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -319,7 +318,7 @@ def valid_email(email):
 
 class Signup(BlogHandler):
     def get(self):
-        self.render("signup-form.html")
+        self.render('signup-form.html')
 
     def post(self):
         have_error = False
@@ -373,6 +372,7 @@ class Register(Signup):
             self.redirect('/blog')
 
 class Login(BlogHandler):
+    # Log in the blog.
     def get(self):
         self.render('login-form.html')
 
@@ -425,7 +425,7 @@ class EditPost(BlogHandler):
         elif self.user and self.user.key().id() != post.author:
             print "self.user.key().id(): ", self.user.key().id()
             error = "You are not allowed to edit this post!"
-            self.render("error.html", error=error)
+            self.render('error.html', error=error)
         else:
             self.render('editpost.html', post = post)
 
@@ -442,7 +442,7 @@ class EditPost(BlogHandler):
             self.render('deletepost.html', msg=msg)
         elif self.user and self.user.key().id() != post.author:
             error = "You're not allowed"
-            self.render("error.html", error=error)
+            self.render('error.html', error=error)
         else:
             subject = self.request.get('subject')
             content = self.request.get('content')
@@ -455,7 +455,7 @@ class EditPost(BlogHandler):
                 self.redirect('/blog/%s' % str(post.key().id()))
             else:
                 error = "subject and content, please!"
-                self.render("editpost.html", post=post, subject=subject, content=content, error=error)
+                self.render('editpost.html', post=post, subject=subject, content=content, error=error)
 
 class DeletePost(BlogHandler):
     # Delte the post page
@@ -471,7 +471,6 @@ class DeletePost(BlogHandler):
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
         else:
-            # print "Delete... ", self.user.key().id()
             db.delete(key)
             msg = "This post is successfully deleted!"
             self.render('deletepost.html', msg=msg)
