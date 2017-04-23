@@ -45,7 +45,7 @@
     <span style="color:red;">
                   {{ commenterror }}
                 </span>
-    <br><br>
+    <br><br> {% if user.name == comment.comment_author %}
     <a href="/blog/editcomment/{{comment.key().id()}}">
         <input class="btn btn-primary" type="button" name="" value="Edit Comment">
     </a>
@@ -53,6 +53,7 @@
     <a href="/blog/deletecomment/{{comment.key().id()}}">
         <input class="btn btn-primary" type="button" name="" value="Delete Comment">
     </a>
+    {% endif %}
 </div>
 {% endfor %}
 <form method="post">

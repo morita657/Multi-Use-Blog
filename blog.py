@@ -174,6 +174,7 @@ class PostPage(BlogHandler):
         if not post:
             self.error(404)
             return
+        print "user name", self.user.name
 
         post._render_text = post.content.replace('\n', '<br>')
         self.render('permalink.html', post = post, comment=comment, comments=comments)
@@ -203,7 +204,6 @@ class EditComment(BlogHandler):
             key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
             comment = db.get(key)
             print "this is author id ", self.user.key().id()
-            # print "this is c... ", c.comments
             if self.user.name == comment.comment_author:
                 self.render('editcomment.html', comment=comment)
             else:

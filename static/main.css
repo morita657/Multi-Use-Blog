@@ -118,6 +118,14 @@ input[type=submit] {
     height: 20px;
 }
 
+.label {
+    text-align: right;
+}
+
+.error {
+    color: red;
+}
+
 #total-votes {
     float: left;
     margin: 15px;
