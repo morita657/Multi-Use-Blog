@@ -1,7 +1,7 @@
 <div class="post">
     <div class="post-heading">
         <div class="post-title-link">
-            <a href="{{'/blog/%s' % p.key().id()}}">{{ p.subject | safe }}</a>
+            <a href="{{'/blog/%s' % p.key.id()}}">{{ p.subject | safe }}</a>
         </div>
 
         <div class="post-date">
@@ -14,10 +14,10 @@
     </div>
     <h3>Total votes: {{p.like_by}}</h3>
     <div>
-        <a href="{{'/blog/editpost/%s' % p.key().id()}}">
+        <a href="{{'/blog/editpost/%s' % p.key.id()}}">
             <input class="btn btn-primary" type="button" name="" value="Edit Post">
         </a>
-        <a href="{{'/blog/deletepost/%s' % p.key().id()}}">
+        <a href="{{'/blog/deletepost/%s' % p.key.id()}}">
             <input class="btn btn-primary" type="button" name="" value="Delete Post">
         </a>
     </div>

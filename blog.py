@@ -8,7 +8,7 @@ from string import letters
 import webapp2
 import jinja2
 
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -50,8 +50,8 @@ class BlogHandler(webapp2.RequestHandler):
         return cookie_val and check_secure_val(cookie_val)
 
     def login(self, user):
-        self.set_secure_cookie('user_id', str(user.key().id()))
-        print "Logged in... uid and user_id", str(user.key().id())
+        self.set_secure_cookie('user_id', str(user.key.id()))
+        print "Logged in... uid and user_id", str(user.key.id())
 
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
@@ -85,12 +85,12 @@ def valid_pw(name, password, h):
     return h == make_pw_hash(name, password, salt)
 
 def users_key(group = 'default'):
-    return db.Key.from_path('users', group)
+    return ndb.Key('users', group)
 
-class User(db.Model):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
-    email = db.StringProperty()
+class User(ndb.Model):
+    name = ndb.StringProperty(required = True)
+    pw_hash = ndb.StringProperty(required = True)
+    email = ndb.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
@@ -98,7 +98,7 @@ class User(db.Model):
 
     @classmethod
     def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
+        u = User.query().filter(User.name == name).get()
         return u
 
     @classmethod
@@ -119,16 +119,16 @@ class User(db.Model):
 ##### blog stuff
 
 def blog_key(name = 'default'):
-    return db.Key.from_path('blogs', name)
+    return ndb.Key('blogs', name).get()
 
 
-class Post(db.Model):
-    subject = db.StringProperty(required = True)
-    content = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-    last_modified = db.DateTimeProperty(auto_now = True)
-    author = db.IntegerProperty(required = True)
-    like = db.ListProperty(int)
+class Post(ndb.Model):
+    subject = ndb.StringProperty(required = True)
+    content = ndb.TextProperty(required = True)
+    created = ndb.DateTimeProperty(auto_now_add = True)
+    last_modified = ndb.DateTimeProperty(auto_now = True)
+    author = ndb.KeyProperty(kind = 'User')
+    like = ndb.IntegerProperty(repeated=True)
 
     @property
     def like_by(self):
@@ -139,25 +139,24 @@ class Post(db.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
 
-class Comment(db.Model):
-    comments = db.TextProperty(required = True)
-    post_id = db.IntegerProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-    comment_author = db.StringProperty(required = True)
-    author_id = db.IntegerProperty(required = True)
+class Comment(ndb.Model):
+    comments = ndb.TextProperty(required = True)
+    post_id = ndb.IntegerProperty(required = True)
+    created = ndb.DateTimeProperty(auto_now_add = True)
+    comment_author = ndb.StringProperty(required = True)
+    author_id = ndb.IntegerProperty(required = True)
 
     # Find comment post id
     @classmethod
     def find_comment_id(cls, post_id):
-        return Comment.all().filter('post_id =', post_id).get()
+        return Comment.query().filter(Comment.post_id == post_id).get()
 
 
 class BlogFront(BlogHandler):
     def get(self):
-        posts = greetings = Post.all().order('-created')
-
-        for post in posts:
-            print "post author", post.author
+        # Check if this works...
+        # posts = greetings = Post.all().order('-created')
+        posts = greetings = Post.query().order(-Post.created)
 
         self.render('front.html', posts = posts)
 
@@ -165,11 +164,11 @@ class BlogFront(BlogHandler):
 class PostPage(BlogHandler):
     # Write new post if a user is logged in.
     def get(self, post_id, comment=""):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        key = ndb.Key('Post', int(post_id), parent=blog_key())
+        post = key.get()
 
         # Look up comments
-        comments = Comment.all().filter('post_id =', int(post_id)).order('-created')
+        comments = Comment.query().filter(Comment.post_id == int(post_id)).order(-Comment.created)
 
         if not post:
             self.error(404)
@@ -179,21 +178,39 @@ class PostPage(BlogHandler):
         post._render_text = post.content.replace('\n', '<br>')
         self.render('permalink.html', post = post, comment=comment, comments=comments)
 
+    # def post(self, post_id):
+    #     comments = self.request.get('comment')
+    #     key = ndb.Key('Post', int(post_id), parent=blog_key())
+    #     post = key.get()
+    #
+    #     # print "putting...", post.author, self.user.key.id()
+    #     if self.user == "":
+    #         self.redirect('/login')
+    #     elif self.user.key.id():
+    #         p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author_id=int(self.user.key.id()))
+    #         p.put()
+    #         self.redirect('/blog/%s' % int(p.post_id))
+    #     else:
+    #         error= "You cannot comment on your post"
+    #         self.render('error.html', error=error)
+
+class NewComment(BlogHandler):
     def post(self, post_id):
         comments = self.request.get('comment')
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        key = ndb.Key('Post', int(post_id), parent=blog_key())
+        post = key.get()
 
-        # print "putting...", post.author, self.user.key().id()
+        # print "putting...", post.author, self.user.key.id()
         if self.user == "":
             self.redirect('/login')
-        elif self.user.key().id():
-            p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author_id=int(self.user.key().id()))
+        elif self.user.key.id():
+            p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author_id=int(self.user.key.id()))
             p.put()
-            self.redirect('/blog/%s' % int(post_id))
+            self.redirect('/blog/%s' % int(p.post_id))
         else:
             error= "You cannot comment on your post"
             self.render('error.html', error=error)
+
 
 class EditComment(BlogHandler):
     # Edit comment if the comment is written by same author.
@@ -201,9 +218,9 @@ class EditComment(BlogHandler):
         if self.user == "":
             self.redirect("/login")
         elif self.user:
-            key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
-            comment = db.get(key)
-            print "this is author id ", self.user.key().id()
+            key = ndb.Key('Comment', int(post_id), parent=blog_key())
+            comment = key.get()
+            print "this is author id ", self.user.key.id()
             if self.user.name == comment.comment_author:
                 self.render('editcomment.html', comment=comment)
             else:
@@ -211,8 +228,9 @@ class EditComment(BlogHandler):
                 self.render('error.html', error=error)
 
     def post(self, post_id):
-        key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
-        post = db.get(key)
+        key = ndb.Key('Comment', int(post_id), parent=blog_key())
+        post = key.get()
+
         print "post id is... ", post.post_id
         comment = self.request.get('comment')
         author = self.user.name
@@ -222,7 +240,7 @@ class EditComment(BlogHandler):
             post.comments = comment
             post.post_id = int(post.post_id)
             post.comment_author = str(author)
-            post.author_id = int(self.user.key().id())
+            post.author_id = int(self.user.key.id())
             post.put()
             self.redirect('/blog/%s' % int(post.post_id))
         else:
@@ -236,10 +254,10 @@ class DeleteComment(BlogHandler):
         if self.user == "":
             self.redirect("/login")
         elif self.user:
-            key = db.Key.from_path('Comment', int(post_id), parent=blog_key())
-            comment = db.get(key)
+            key = ndb.Key('Comment', int(post_id), parent=blog_key())
+            comment = key.get()
             if self.user.name == comment.comment_author:
-                db.delete(key)
+                key.delete()
                 msg = "This comment is successfully deleted!"
                 self.render('deletecomment.html', msg=msg)
             else:
@@ -250,25 +268,25 @@ class LikePost(BlogHandler):
     # If a user is logged in, she is allowed to like/ dislike a specific post
     # using 'Like' button.
     def post(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        key = ndb.Key('Post', int(post_id), parent=blog_key())
+        post = key.get()
         if self.user == "":
             self.redirect("/signup")
-        elif self.user and post.author == self.user.key().id():
+        elif self.user and post.author == self.user.key.id():
             print "post author: ", post.author
-            print "user key id: ", self.user.key().id()
+            print "user key id: ", self.user.key.id()
             error = "You cannot upvoke this post!"
             self.render('error.html', error=error)
-        elif  self.user and post.author != self.user.key().id():
-            if not self.user.key().id() in post.like:
+        elif  self.user and post.author != self.user.key.id():
+            if not self.user.key.id() in post.like:
                 print "post author: ", post.author
-                print "user key id: ", self.user.key().id()
+                print "user key id: ", self.user.key.id()
                 print "user name: ", self.user.name
-                post.like.append(self.user.key().id())
+                post.like.append(self.user.key.id())
                 post.put()
                 self.redirect('/blog/%s' % int(post_id))
-            elif self.user.key().id() in post.like:
-                post.like.remove(self.user.key().id())
+            elif self.user.key.id() in post.like:
+                post.like.remove(self.user.key.id())
                 post.put()
                 print "post author: ", post.author
                 print "user key id: ", self.user
@@ -286,19 +304,21 @@ class NewPost(BlogHandler):
             self.redirect("/login")
 
     def post(self):
-        uid = self.read_secure_cookie('user_id')
+        # uid = self.read_secure_cookie('user_id')
         if not self.user:
             self.redirect('/blog')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
-        author = self.user.key().id()
+        author = self.user.key.id()
+        print "NewPost... ", self.user.key.id()
 
         if subject and content:
-            print "NewPost... ", self.user.key().id(), int(uid)
-            p = Post(parent = blog_key(), subject = subject, content = content, author=int(author))
+            print "NewPost... ", self.user.key.id()
+            # TODO: Find a way to save author
+            p = Post(parent = blog_key(), subject = subject, content = content)
             p.put()
-            self.redirect('/blog/%s' % str(p.key().id()))
+            self.redirect('/blog/%s' % str(p.key.id()))
         else:
             error = "subject and content, please!"
             self.render('newpost.html', subject=subject, content=content, error=error)
@@ -412,18 +432,22 @@ class Welcome(BlogHandler):
 class EditPost(BlogHandler):
     # Go to the specific post page to edit
     def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        key = ndb.Key('Post', int(post_id), parent=blog_key())
+        post = key.get()
         commentt = Comment.get_by_id(int(post_id))
-        # print "heyy...", self.user.key().id(), post.author, post_id
-        print "this is edit post page...: ", post_id, commentt
+        # print "heyy...", self.user.key.id(), post.author, post_id
+        # print "this is edit post page...: ", post_id, commentt, post
+        print "SHow post data... ", post
+
 
         # Edit posts if user id and the author's match, otherwise invoke error message
         print "Check user... ", self.user
+        print "user id... ", self.user.key.id()
+        print "post id... ", post.key
         if self.user == "":
             self.redirect('/login')
-        elif self.user and self.user.key().id() != post.author:
-            print "self.user.key().id(): ", self.user.key().id()
+        elif self.user and self.user.key.id() != post.author:
+            # print "self.user.key.id(): ", self.user.key.id()
             error = "You are not allowed to edit this post!"
             self.render('error.html', error=error)
         else:
@@ -435,12 +459,12 @@ class EditPost(BlogHandler):
             return
 
     def post(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        key = ndb.Key('Post', int(post_id), parent=blog_key())
+        post = key.get()
         if self.user == "":
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
-        elif self.user and self.user.key().id() != post.author:
+        elif self.user and self.user.key.id() != post.author:
             error = "You're not allowed"
             self.render('error.html', error=error)
         else:
@@ -452,7 +476,7 @@ class EditPost(BlogHandler):
                 post.content = content
                 post.author = int(post.author)
                 post.put()
-                self.redirect('/blog/%s' % str(post.key().id()))
+                self.redirect('/blog/%s' % str(post.key.id()))
             else:
                 error = "subject and content, please!"
                 self.render('editpost.html', post=post, subject=subject, content=content, error=error)
@@ -460,18 +484,18 @@ class EditPost(BlogHandler):
 class DeletePost(BlogHandler):
     # Delte the post page
     def get(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        key = ndb.Key('Post', int(post_id), parent=blog_key())
+        post = key.get()
         # Check if the editer is logged in and the editer is the author of the post.
         if self.user == "":
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
-        elif self.user and self.user.key().id() != post.author:
-            print "DO NOT Delete... ", self.user.key().id()
+        elif self.user and self.user.key.id() != post.author:
+            print "DO NOT Delete... ", self.user.key.id()
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
         else:
-            db.delete(key)
+            key.delete()
             msg = "This post is successfully deleted!"
             self.render('deletepost.html', msg=msg)
 
@@ -494,5 +518,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/editcomment/(\d+)', EditComment),
                                ('/blog/deletecomment/(\d+)', DeleteComment),
                                ('/blog/liked/(\d+)', LikePost),
+                               ('/blog/comment/(\d+)', NewComment),
                                ],
                               debug=True)

@@ -19,7 +19,7 @@
 
 {% if user.name %}
 <div class="">
-    <form class="" method="post" action="/blog/liked/{{post.key().id()}}">
+    <form class="" method="post" action="/blog/liked/{{post.key.id()}}">
         <span id="good">good</span>
         <button type="submit" name="button">
           <i class="fa fa-thumbs-o-up fa-3x" aria-hidden="true" type="submit"></i>
@@ -46,17 +46,17 @@
                   {{ commenterror }}
                 </span>
     <br><br> {% if user.name == comment.comment_author %}
-    <a href="/blog/editcomment/{{comment.key().id()}}">
+    <a href="/blog/editcomment/{{comment.key.id()}}">
         <input class="btn btn-primary" type="button" name="" value="Edit Comment">
     </a>
 
-    <a href="/blog/deletecomment/{{comment.key().id()}}">
+    <a href="/blog/deletecomment/{{comment.key.id()}}">
         <input class="btn btn-primary" type="button" name="" value="Delete Comment">
     </a>
     {% endif %}
 </div>
 {% endfor %}
-<form method="post">
+<form method="post" action="/blog/comment/{{post.key.id()}}">
     <label for="comment" class="comment-label form-group">Add comments: </label>
     <textarea class="form-control" name="comment" rows="2" cols="80">{{ comment }}</textarea>
     <div class="error">{{ error }}</div>

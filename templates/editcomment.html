@@ -4,7 +4,7 @@
     <textarea name="comment" rows="8" cols="80">{{ comment.comments }}</textarea> {{post_id}}
     <div class="error">{{ error }}</div>
     <input type="submit">
-    <a href="{{'/blog/%s' % post.key().id()}}">cancel</a>
+    <a href="{{'/blog/%s' % post.key.id()}}">cancel</a>
 </form>
 
 {% endblock %}
