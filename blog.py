@@ -9,6 +9,7 @@ import webapp2
 import jinja2
 
 from google.appengine.ext import ndb
+from functools import wraps
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -135,9 +136,21 @@ class Post(ndb.Model):
         return len(self.like)
 
     def render(self):
-
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
+
+def post_exists(function):
+    @wraps(function)
+    def wrapper(self, post_id):
+        key = ndb.Key('Post', int(post_id))
+        post = key.get()
+        if post:
+            return function(self, post_id, post)
+        else:
+            print "404 error"
+            self.error(404)
+            return
+    return wrapper
 
 class Comment(ndb.Model):
     comments = ndb.TextProperty(required = True)
@@ -166,6 +179,7 @@ class PostPage(BlogHandler):
     def get(self, post_id, comment=""):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
+        print "show post... ", post
 
         # Look up comments
         comments = Comment.query().filter(Comment.post_id == int(post_id)).order(-Comment.created)
@@ -177,22 +191,6 @@ class PostPage(BlogHandler):
 
         post._render_text = post.content.replace('\n', '<br>')
         self.render('permalink.html', post = post, comment=comment, comments=comments)
-
-    # def post(self, post_id):
-    #     comments = self.request.get('comment')
-    #     key = ndb.Key('Post', int(post_id), parent=blog_key())
-    #     post = key.get()
-    #
-    #     # print "putting...", post.author, self.user.key.id()
-    #     if self.user == "":
-    #         self.redirect('/login')
-    #     elif self.user.key.id():
-    #         p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author_id=int(self.user.key.id()))
-    #         p.put()
-    #         self.redirect('/blog/%s' % int(p.post_id))
-    #     else:
-    #         error= "You cannot comment on your post"
-    #         self.render('error.html', error=error)
 
 class NewComment(BlogHandler):
     def post(self, post_id):
@@ -304,7 +302,6 @@ class NewPost(BlogHandler):
             self.redirect("/login")
 
     def post(self):
-        # uid = self.read_secure_cookie('user_id')
         if not self.user:
             self.redirect('/blog')
 
@@ -316,7 +313,7 @@ class NewPost(BlogHandler):
         if subject and content:
             print "NewPost... ", self.user.key.id()
             # TODO: Find a way to save author
-            p = Post(parent = blog_key(), subject = subject, content = content)
+            p = Post(parent = blog_key(), subject = subject, content = content, author=ndb.Key('User', int(author)))
             p.put()
             self.redirect('/blog/%s' % str(p.key.id()))
         else:
@@ -431,32 +428,20 @@ class Welcome(BlogHandler):
 
 class EditPost(BlogHandler):
     # Go to the specific post page to edit
-    def get(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
+    @post_exists
+    def get(self, post_id, post):
         commentt = Comment.get_by_id(int(post_id))
-        # print "heyy...", self.user.key.id(), post.author, post_id
-        # print "this is edit post page...: ", post_id, commentt, post
-        print "SHow post data... ", post
-
+        print "Return the number of ", self.user.key.id(), post.key.id()
 
         # Edit posts if user id and the author's match, otherwise invoke error message
-        print "Check user... ", self.user
-        print "user id... ", self.user.key.id()
-        print "post id... ", post.key
         if self.user == "":
             self.redirect('/login')
-        elif self.user and self.user.key.id() != post.author:
-            # print "self.user.key.id(): ", self.user.key.id()
+        elif self.user and self.user.key.id() != post.author.id():
             error = "You are not allowed to edit this post!"
+            print "Alert! ", post.author
             self.render('error.html', error=error)
         else:
             self.render('editpost.html', post = post)
-
-        # If the specific post does not exist return 404
-        if not post:
-            self.error(404)
-            return
 
     def post(self, post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
