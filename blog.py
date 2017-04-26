@@ -164,6 +164,20 @@ class Comment(ndb.Model):
     def find_comment_id(cls, post_id):
         return Comment.query().filter(Comment.post_id == post_id).get()
 
+def comment_exists(function):
+    @wraps(function)
+    def wrapper(self, post_id):
+        # key = ndb.Key('Post', int(post_id))
+        # post = key.get()
+        key = ndb.Key('Comment', int(post_id), parent=blog_key())
+        comment = key.get()
+        if comment:
+            return function(self, post_id, comment)
+        else:
+            print "404 error"
+            self.error(404)
+            return
+    return wrapper
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -212,18 +226,24 @@ class NewComment(BlogHandler):
 
 class EditComment(BlogHandler):
     # Edit comment if the comment is written by same author.
-    def get(self, post_id):
+    @comment_exists
+    def get(self, post_id, comment):
         if self.user == "":
             self.redirect("/login")
-        elif self.user:
-            key = ndb.Key('Comment', int(post_id), parent=blog_key())
-            comment = key.get()
-            print "this is author id ", self.user.key.id()
-            if self.user.name == comment.comment_author:
-                self.render('editcomment.html', comment=comment)
-            else:
-                error = "You are not allowed to edit this comment!"
-                self.render('error.html', error=error)
+        # elif self.user:
+        #     key = ndb.Key('Comment', int(post_id), parent=blog_key())
+        #     comment = key.get()
+        #     print "this is author id ", self.user.key.id()
+        #     if self.user.name == comment.comment_author:
+        #         self.render('editcomment.html', comment=comment)
+        #     else:
+        #         error = "You are not allowed to edit this comment!"
+        #         self.render('error.html', error=error)
+        elif self.user and self.user.name != comment.comment_author:
+            error = "You are not allowed to edit this comment!"
+            self.render('error.html', error=error)
+        else:
+            self.render('editcomment.html', comment=comment)
 
     def post(self, post_id):
         key = ndb.Key('Comment', int(post_id), parent=blog_key())
@@ -446,10 +466,11 @@ class EditPost(BlogHandler):
     def post(self, post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
+        author = self.user.key.id()
         if self.user == "":
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
-        elif self.user and self.user.key.id() != post.author:
+        elif self.user and self.user.key.id() != post.author.id():
             error = "You're not allowed"
             self.render('error.html', error=error)
         else:
@@ -459,7 +480,7 @@ class EditPost(BlogHandler):
             if subject and content:
                 post.subject = subject
                 post.content = content
-                post.author = int(post.author)
+                post.author = author=ndb.Key('User', int(author))
                 post.put()
                 self.redirect('/blog/%s' % str(post.key.id()))
             else:
