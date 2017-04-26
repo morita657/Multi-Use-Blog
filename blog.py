@@ -116,6 +116,15 @@ class User(ndb.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
+# Check if a user is logged in.
+def user_logged_in(function):
+    @wraps(function)
+    def wrapper(self, post_id):
+        if self.user:
+            return function(self, post_id)
+        else:
+            self.redirect('/login')
+    return wrapper
 
 ##### blog stuff
 
@@ -139,6 +148,7 @@ class Post(ndb.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
 
+# Check if a post exists.
 def post_exists(function):
     @wraps(function)
     def wrapper(self, post_id):
@@ -165,11 +175,10 @@ class Comment(ndb.Model):
     def find_comment_id(cls, post_id):
         return Comment.query().filter(Comment.post_id == post_id).get()
 
+# Check if a comment exists.
 def comment_exists(function):
     @wraps(function)
     def wrapper(self, post_id):
-        # key = ndb.Key('Post', int(post_id))
-        # post = key.get()
         key = ndb.Key('Comment', int(post_id), parent=blog_key())
         comment = key.get()
         if comment:
@@ -213,7 +222,6 @@ class NewComment(BlogHandler):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
 
-        # print "putting...", post.author, self.user.key.id()
         if self.user == "":
             print "yoyoyo"
             self.redirect('/login')
@@ -229,20 +237,17 @@ class NewComment(BlogHandler):
 
 class EditComment(BlogHandler):
     # Edit comment if the comment is written by same author.
+    @user_logged_in
     @comment_exists
     def get(self, post_id, comment):
-        if self.user == "":
-            self.redirect("/login")
-        elif self.user:
-            key = ndb.Key('Comment', int(post_id), parent=blog_key())
-            comment = key.get()
-            print "this is author id ", self.user.key.id()
-            # print "this is c... ", c.comments
-            if self.user.key.id() == comment.author.id():
-                self.render('editcomment.html', comment=comment)#, post=post)
-            else:
-                error = "You are not allowed to edit this comment!"
-                self.render('error.html', error=error)
+
+        key = ndb.Key('Comment', int(post_id), parent=blog_key())
+        comment = key.get()
+        if self.user.key.id() == comment.author.id():
+            self.render('editcomment.html', comment=comment)
+        else:
+            error = "You are not allowed to edit this comment!"
+            self.render('error.html', error=error)
 
     def post(self, post_id):
         key = ndb.Key('Comment', int(post_id), parent=blog_key())
@@ -265,10 +270,11 @@ class EditComment(BlogHandler):
 class DeleteComment(BlogHandler):
     # A user is allowed to delete a post if she is logged in and the post is
     # made by her.
+    @user_logged_in
     def get(self, post_id):
-        if self.user == "":
-            self.redirect("/login")
-        elif self.user:
+        # if self.user == "":
+        #     self.redirect("/login")
+        if self.user:
             key = ndb.Key('Comment', int(post_id), parent=blog_key())
             comment = key.get()
             if self.user.name == comment.comment_author:
@@ -325,11 +331,8 @@ class NewPost(BlogHandler):
         subject = self.request.get('subject')
         content = self.request.get('content')
         author = self.user.key.id()
-        print "NewPost... ", self.user.key.id()
 
         if subject and content:
-            print "NewPost... ", self.user.key.id()
-            # TODO: Find a way to save author
             p = Post(parent = blog_key(), subject = subject, content = content, author=ndb.Key('User', int(author)))
             p.put()
             self.redirect('/blog/%s' % str(p.key.id()))
@@ -445,29 +448,24 @@ class Welcome(BlogHandler):
 
 class EditPost(BlogHandler):
     # Go to the specific post page to edit
+    @user_logged_in
     @post_exists
     def get(self, post_id, post):
         commentt = Comment.get_by_id(int(post_id))
-        print "Return the number of ", self.user.key.id(), post.key.id()
 
         # Edit posts if user id and the author's match, otherwise invoke error message
-        if self.user == "":
-            self.redirect('/login')
-        elif self.user and self.user.key.id() != post.author.id():
+        if self.user and self.user.key.id() != post.author.id():
             error = "You are not allowed to edit this post!"
-            print "Alert! ", post.author
             self.render('error.html', error=error)
         else:
             self.render('editpost.html', post = post)
 
+    @user_logged_in
     def post(self, post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
         author = self.user.key.id()
-        if self.user == "":
-            msg= "You cannot delete this post!"
-            self.render('deletepost.html', msg=msg)
-        elif self.user and self.user.key.id() != post.author.id():
+        if self.user and self.user.key.id() != post.author.id():
             error = "You're not allowed"
             self.render('error.html', error=error)
         else:
@@ -486,14 +484,12 @@ class EditPost(BlogHandler):
 
 class DeletePost(BlogHandler):
     # Delte the post page
+    @user_logged_in
     def get(self, post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
         # Check if the editer is logged in and the editer is the author of the post.
-        if self.user == "":
-            msg= "You cannot delete this post!"
-            self.render('deletepost.html', msg=msg)
-        elif self.user and self.user.key.id() != post.author:
+        if self.user and self.user.key.id() != post.author:
             print "DO NOT Delete... ", self.user.key.id()
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
