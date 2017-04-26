@@ -157,7 +157,8 @@ class Comment(ndb.Model):
     post_id = ndb.IntegerProperty(required = True)
     created = ndb.DateTimeProperty(auto_now_add = True)
     comment_author = ndb.StringProperty(required = True)
-    author_id = ndb.IntegerProperty(required = True)
+    # author_id = ndb.IntegerProperty(required = True)
+    author = ndb.KeyProperty(kind = 'User')
 
     # Find comment post id
     @classmethod
@@ -201,7 +202,7 @@ class PostPage(BlogHandler):
         if not post:
             self.error(404)
             return
-        print "user name", self.user.name
+        # print "user name", self.user.name
 
         post._render_text = post.content.replace('\n', '<br>')
         self.render('permalink.html', post = post, comment=comment, comments=comments)
@@ -214,9 +215,11 @@ class NewComment(BlogHandler):
 
         # print "putting...", post.author, self.user.key.id()
         if self.user == "":
+            print "yoyoyo"
             self.redirect('/login')
-        elif self.user.key.id():
-            p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author_id=int(self.user.key.id()))
+        elif self.user and self.user.key.id():
+            author = self.user.key.id()
+            p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author=ndb.Key('User', int(author)))
             p.put()
             self.redirect('/blog/%s' % int(p.post_id))
         else:
@@ -230,35 +233,29 @@ class EditComment(BlogHandler):
     def get(self, post_id, comment):
         if self.user == "":
             self.redirect("/login")
-        # elif self.user:
-        #     key = ndb.Key('Comment', int(post_id), parent=blog_key())
-        #     comment = key.get()
-        #     print "this is author id ", self.user.key.id()
-        #     if self.user.name == comment.comment_author:
-        #         self.render('editcomment.html', comment=comment)
-        #     else:
-        #         error = "You are not allowed to edit this comment!"
-        #         self.render('error.html', error=error)
-        elif self.user and self.user.name != comment.comment_author:
-            error = "You are not allowed to edit this comment!"
-            self.render('error.html', error=error)
-        else:
-            self.render('editcomment.html', comment=comment)
+        elif self.user:
+            key = ndb.Key('Comment', int(post_id), parent=blog_key())
+            comment = key.get()
+            print "this is author id ", self.user.key.id()
+            # print "this is c... ", c.comments
+            if self.user.key.id() == comment.author.id():
+                self.render('editcomment.html', comment=comment)#, post=post)
+            else:
+                error = "You are not allowed to edit this comment!"
+                self.render('error.html', error=error)
 
     def post(self, post_id):
         key = ndb.Key('Comment', int(post_id), parent=blog_key())
         post = key.get()
 
-        print "post id is... ", post.post_id
         comment = self.request.get('comment')
-        author = self.user.name
-        print "post button clicked... ", comment
+        author = self.user.key.id()
 
         if comment:
             post.comments = comment
             post.post_id = int(post.post_id)
-            post.comment_author = str(author)
-            post.author_id = int(self.user.key.id())
+            post.comment_author = str(self.user.name)
+            post.author = ndb.Key('User', int(author))
             post.put()
             self.redirect('/blog/%s' % int(post.post_id))
         else:
@@ -480,7 +477,7 @@ class EditPost(BlogHandler):
             if subject and content:
                 post.subject = subject
                 post.content = content
-                post.author = author=ndb.Key('User', int(author))
+                post.author = author = ndb.Key('User', int(author))
                 post.put()
                 self.redirect('/blog/%s' % str(post.key.id()))
             else:
@@ -518,12 +515,12 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/login', Login),
                                ('/logout', Logout),
                             #    ('/unit3/welcome', Unit3Welcome),
+                               ('/blog/comment/(\d+)', NewComment),
                                ('/blog/editpost/(\d+)', EditPost),
                                ('/blog/deletepost/(\d+)', DeletePost),
                             #    ('/blog/([0-9]+)', CommentPost),
                                ('/blog/editcomment/(\d+)', EditComment),
                                ('/blog/deletecomment/(\d+)', DeleteComment),
                                ('/blog/liked/(\d+)', LikePost),
-                               ('/blog/comment/(\d+)', NewComment),
                                ],
                               debug=True)
