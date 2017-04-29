@@ -203,6 +203,10 @@ class PostPage(BlogHandler):
     def get(self, post_id, comment=""):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
+
+        # comment_key = ndb.Key('Comment', int(post_id), parent=blog_key())
+        # comment = comment_key.get()
+
         print "show post... ", post
 
         # Look up comments
@@ -211,7 +215,6 @@ class PostPage(BlogHandler):
         if not post:
             self.error(404)
             return
-        # print "user name", self.user.name
 
         post._render_text = post.content.replace('\n', '<br>')
         self.render('permalink.html', post = post, comment=comment, comments=comments)
@@ -223,10 +226,10 @@ class NewComment(BlogHandler):
         post = key.get()
 
         if self.user == "":
-            print "yoyoyo"
             self.redirect('/login')
         elif self.user and self.user.key.id():
             author = self.user.key.id()
+            post_id = post.key.id()
             p = Comment(parent = blog_key(), comments=comments, post_id=int(post_id), comment_author=str(self.user.name), author=ndb.Key('User', int(author)))
             p.put()
             self.redirect('/blog/%s' % int(p.post_id))
@@ -451,8 +454,6 @@ class EditPost(BlogHandler):
     @user_logged_in
     @post_exists
     def get(self, post_id, post):
-        commentt = Comment.get_by_id(int(post_id))
-
         # Edit posts if user id and the author's match, otherwise invoke error message
         if self.user and self.user.key.id() != post.author.id():
             error = "You are not allowed to edit this post!"
@@ -488,16 +489,23 @@ class DeletePost(BlogHandler):
     def get(self, post_id):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
+        # Look up relevant comments
+        comments = Comment.query().filter(Comment.post_id == int(post_id)).order(-Comment.created)
+        # Pick up these comments
+        comment_box = []
+        for c in comments:
+            comment_box.append(c.key)
         # Check if the editer is logged in and the editer is the author of the post.
-        if self.user and self.user.key.id() != post.author:
-            print "DO NOT Delete... ", self.user.key.id()
+        if self.user and self.user.key.id() != post.author.id():
+            print "DO NOT Delete... ", self.user.key.id(), post.author.id()
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)
         else:
+            ndb.delete_multi(comment_box)
             key.delete()
+            print "deleted!! ", c.key
             msg = "This post is successfully deleted!"
             self.render('deletepost.html', msg=msg)
-
 
 
 app = webapp2.WSGIApplication([('/', MainPage),
