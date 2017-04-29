@@ -6,7 +6,7 @@
         </div>
 
         <div class="post-date">
-            {{ post.created | safe }}
+            {{ post.created.strftime('%B %d, %Y') | safe }}
         </div>
     </div>
 
@@ -34,7 +34,7 @@
         Poted by: {{ comment.comment_author}}
     </div>
     <div class="" style="position: absolute; right: 0px; color: #999;">
-        {{ comment.created }}
+        {{ comment.created.strftime('%B %d, %Y') }}
     </div>
 
     <br>

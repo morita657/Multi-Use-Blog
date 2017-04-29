@@ -167,7 +167,6 @@ class Comment(ndb.Model):
     post_id = ndb.IntegerProperty(required = True)
     created = ndb.DateTimeProperty(auto_now_add = True)
     comment_author = ndb.StringProperty(required = True)
-    # author_id = ndb.IntegerProperty(required = True)
     author = ndb.KeyProperty(kind = 'User')
 
     # Find comment post id

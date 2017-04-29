@@ -96,6 +96,7 @@ input[type=submit] {
     font-size: 24px;
     font-weight: bold;
     margin-right: 10px;
+    width: 95%;
 }
 
 .post-date {
@@ -124,6 +125,10 @@ input[type=submit] {
 
 .error {
     color: red;
+}
+
+#title {
+    margin-top: 15px;
 }
 
 #total-votes {

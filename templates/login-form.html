@@ -4,25 +4,10 @@
         <div class="col-md-12">
             <h2>Login</h2>
             <form method="post">
-                <table>
-                    <tr class="form-group">
-                        <td class="label">
-                            <label for="username">Username</label>
-                        </td>
-                        <td>
-                            <input id="username" class="form-control" type="text" name="username" value="{{username}}">
-                        </td>
-                    </tr>
-
-                    <tr class="form-group">
-                        <td class="label">
-                            <label for="password">Password</label>
-                        </td>
-                        <td>
-                            <input id="password" class="form-control" type="password" name="password" value="">
-                        </td>
-                    </tr>
-                </table>
+                <label for="username">Username</label>
+                <input id="username" class="form-control" type="text" name="username" value="{{username}}">
+                <label for="password">Password</label>
+                <input id="password" class="form-control" type="password" name="password" value="">
 
                 <div class="error">
                     {{error}}

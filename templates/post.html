@@ -5,7 +5,7 @@
         </div>
 
         <div class="post-date">
-            {{ p.created | safe }}
+            {{ p.created.strftime('%B %d, %Y') | safe }}
         </div>
     </div>
 
@@ -14,11 +14,13 @@
     </div>
     <h3>Total votes: {{p.like_by}}</h3>
     <div>
+        {% if p.key.id() %}
         <a href="{{'/blog/editpost/%s' % p.key.id()}}">
             <input class="btn btn-primary" type="button" name="" value="Edit Post">
         </a>
         <a href="{{'/blog/deletepost/%s' % p.key.id()}}">
             <input class="btn btn-primary" type="button" name="" value="Delete Post">
         </a>
+        {% endif %}
     </div>
 </div>
