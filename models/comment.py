@@ -1,6 +1,5 @@
 from handlers.blog import *
 from google.appengine.ext import ndb
-# from utils import *
 
 class Comment(ndb.Model):
     comments = ndb.TextProperty(required = True)

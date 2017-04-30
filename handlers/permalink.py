@@ -6,9 +6,6 @@ class PostPage(BlogHandler):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
 
-        # comment_key = ndb.Key('Comment', int(post_id), parent=blog_key())
-        # comment = comment_key.get()
-
         print "show post... ", post
 
         # Look up comments
