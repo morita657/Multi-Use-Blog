@@ -101,3 +101,13 @@ def comment_exists(function):
             self.error(404)
             return
     return wrapper
+
+# # Check if user owns a post
+# But how can I use this?
+# def user_owns_post(function):
+#     @wraps(function)
+#     def wrapper(self, post):
+#         # key = ndb.Key('Post', int(post_id), parent=blog_key())
+#         # post = key.get()
+#         return post.author == self.user.key.id()
+#     return wrapper

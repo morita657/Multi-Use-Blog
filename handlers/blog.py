@@ -44,6 +44,12 @@ class BlogHandler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
+    # Check if user owns a post
+    # def user_owns_post(self, post):
+    #     print "post.author ", post.author
+    #     print "self.user.key.id() ", self.user.key.id()
+    #     return post.author == self.user.key.id()
+
 
 class MainPage(BlogHandler):
   def get(self):
