@@ -11,4 +11,4 @@ class Comment(ndb.Model):
     # Find comment post id
     @classmethod
     def find_comment_id(cls, post_id):
-        return Comment.query().filter(Comment.post_id == post_id).get()
+        return Comment.query().filter(Comment.post_id == int(post_id)).order(-Comment.created)

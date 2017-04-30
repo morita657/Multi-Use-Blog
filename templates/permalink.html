@@ -15,9 +15,7 @@
     </div>
 
     <h3 id="total-votes" style="">Total votes: {{post.like_by}}</h3>
-</div>
-
-{% if user.name %}
+</div> {% if user.name %}
 <div class="">
     <form class="" method="post" action="/blog/liked/{{post.key.id()}}">
         <span id="good">good</span>

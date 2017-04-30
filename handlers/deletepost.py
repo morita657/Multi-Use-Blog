@@ -8,7 +8,7 @@ class DeletePost(BlogHandler):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
         # Look up relevant comments
-        comments = Comment.query().filter(Comment.post_id == int(post_id)).order(-Comment.created)
+        comments = Comment.find_comment_id(post_id)
         # Pick up these comments
         comment_box = []
         for c in comments:

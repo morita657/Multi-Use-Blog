@@ -2,6 +2,7 @@ from google.appengine.ext import ndb
 from functools import wraps
 from utils import *
 from handlers.blog import *
+from models.comment import Comment
 
 class Post(ndb.Model):
     subject = ndb.StringProperty(required = True)

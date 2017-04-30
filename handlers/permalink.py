@@ -6,10 +6,8 @@ class PostPage(BlogHandler):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
 
-        print "show post... ", post
-
         # Look up comments
-        comments = Comment.query().filter(Comment.post_id == int(post_id)).order(-Comment.created)
+        comments = Comment.find_comment_id(post_id)
 
         if not post:
             self.error(404)
