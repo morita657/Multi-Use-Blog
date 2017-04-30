@@ -15,7 +15,7 @@
     </div>
 
     <h3 id="total-votes" style="">Total votes: {{post.like_by}}</h3>
-</div> {% if user.name %}
+</div>
 <div class="">
     <form class="" method="post" action="/blog/liked/{{post.key.id()}}">
         <span id="good">good</span>
@@ -24,12 +24,11 @@
         </button>
     </form>
 </div>
-{% endif %}
 <h3 id="comment-title">Comment: </h3>
 <hr> {% for comment in comments %}
 <div class="">
     <div class="" style="float:left">
-        Poted by: {{ comment.comment_author}}
+        Posted by: {{ comment.comment_author}}
     </div>
     <div class="" style="position: absolute; right: 0px; color: #999;">
         {{ comment.created.strftime('%B %d, %Y') }}

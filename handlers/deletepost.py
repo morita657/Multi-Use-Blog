@@ -4,17 +4,18 @@ from blog import *
 class DeletePost(BlogHandler):
     # Delte the post page
     @user_logged_in
-    def get(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
+    @post_exists
+    def get(self, post):
+        key = ndb.Key('Post', int(post.key.id()), parent=blog_key())
         post = key.get()
         # Look up relevant comments
-        comments = Comment.find_comment_id(post_id)
+        comments = Comment.find_comment_id(post.key.id())
         # Pick up these comments
         comment_box = []
         for c in comments:
             comment_box.append(c.key)
         # Check if the editer is logged in and the editer is the author of the post.
-        if self.user and self.user.key.id() != post.author.id():
+        if self.user.key.id() != post.author.id():
             print "DO NOT Delete... ", self.user.key.id(), post.author.id()
             msg= "You cannot delete this post!"
             self.render('deletepost.html', msg=msg)

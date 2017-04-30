@@ -3,11 +3,13 @@ from blog import *
 class LikePost(BlogHandler):
     # If a user is logged in, she is allowed to like/ dislike a specific post
     # using 'Like' button.
-    def post(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
+    @user_logged_in
+    @post_exists
+    def post(self, post):
+        key = ndb.Key('Post', int(post.key.id()), parent=blog_key())
         post = key.get()
         if self.user == "":
-            self.redirect("/signup")
+            self.redirect("/login")
         elif self.user and post.author == self.user.key.id():
             print "post author: ", post.author
             print "user key id: ", self.user.key.id()
@@ -20,7 +22,7 @@ class LikePost(BlogHandler):
                 print "user name: ", self.user.name
                 post.like.append(self.user.key.id())
                 post.put()
-                self.redirect('/blog/%s' % int(post_id))
+                self.redirect('/blog/%s' % int(post.key.id()))
             elif self.user.key.id() in post.like:
                 post.like.remove(self.user.key.id())
                 post.put()
@@ -28,4 +30,4 @@ class LikePost(BlogHandler):
                 print "user key id: ", self.user
                 print "user name: ", self.user.name
                 print "like array: ", post.like
-                self.redirect('/blog/%s' % int(post_id))
+                self.redirect('/blog/%s' % int(post.key.id()))

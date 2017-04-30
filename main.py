@@ -13,6 +13,7 @@ from functools import wraps
 
 
 from utils import *
+from decorators import *
 
 from handlers.blog import *
 from handlers.signup import Register

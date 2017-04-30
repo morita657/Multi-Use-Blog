@@ -4,7 +4,7 @@ class EditPost(BlogHandler):
     # Go to the specific post page to edit
     @user_logged_in
     @post_exists
-    def get(self, post_id, post):
+    def get(self, post):
         # Edit posts if user id and the author's match, otherwise invoke error message
         if self.user and self.user.key.id() != post.author.id():
             error = "You are not allowed to edit this post!"
@@ -13,8 +13,9 @@ class EditPost(BlogHandler):
             self.render('editpost.html', post = post)
 
     @user_logged_in
-    def post(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
+    @post_exists
+    def post(self, post):
+        key = ndb.Key('Post', int(post.key.id()), parent=blog_key())
         post = key.get()
         author = self.user.key.id()
         if self.user and self.user.key.id() != post.author.id():

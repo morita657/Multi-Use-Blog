@@ -5,6 +5,7 @@ import jinja2
 from google.appengine.ext import ndb
 
 from utils import *
+from decorators import *
 
 from models.user import User
 from models.comment import Comment

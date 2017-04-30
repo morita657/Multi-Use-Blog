@@ -11,3 +11,4 @@ from handlers.deletepost import DeletePost
 from handlers.permalink import PostPage
 from handlers.blog import *
 from utils import *
+from decorators import *
