@@ -6,7 +6,7 @@ class EditPost(BlogHandler):
     @post_exists
     def get(self, post):
         # Edit posts if user id and the author's match, otherwise invoke error message
-        if self.user and self.user.key.id() != post.author.id():
+        if self.user.key.id() != post.author.id():
             error = "You are not allowed to edit this post!"
             self.render('error.html', error=error)
         else:
@@ -18,7 +18,7 @@ class EditPost(BlogHandler):
         key = ndb.Key('Post', int(post.key.id()), parent=blog_key())
         post = key.get()
         author = self.user.key.id()
-        if self.user and self.user.key.id() != post.author.id():
+        if self.user.key.id() != post.author.id():
             error = "You're not allowed"
             self.render('error.html', error=error)
         else:
